@@ -261,6 +261,7 @@ void		creatBorder(int xmax, int ymax)
   int		x = 0;
   int		y = 0;
 
+  clear();
   while (x < xmax)
     {
       mvaddch(0, x, '^');
@@ -320,10 +321,7 @@ int		getCmdLine(WINDOW *win)
 	 && key != 'Q' && key != 'Y')
     key = getch();
   if (key == 'y' || key == 'Y')
-    {
-      clear();
-      getCmdLine(win);
-    }
+    getCmdLine(win);
   return (0);
 }
 
