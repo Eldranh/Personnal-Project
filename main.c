@@ -7,6 +7,7 @@
  * Train to bring the most of us.
  */
 
+#include	<string.h>
 #include	<unistd.h>
 #include	<stdlib.h>
 #include	<stdio.h>
@@ -18,6 +19,7 @@
 #include	<time.h>
 
 int		playGame(int key, int x, int y);
+int		usleep(int usec);
 
 typedef struct	s_snake		t_snake;
 
@@ -79,12 +81,12 @@ int		playGame(int key, int max_x, int max_y)
   curs_set(0);
   snake = malloc(sizeof(t_snake*));
   if (snake == NULL)
-    return (1);
+    exit(EXIT_FAILURE);
   snake->x = x;
   snake->y = y;
   snake->next = malloc(sizeof(t_snake*));
   if (snake->next == NULL)
-    return (1);
+    exit(EXIT_FAILURE);
   snake->next->next = snake; 
   snake->next->x = x - 2;
   snake->next->y = y - 1;
@@ -140,7 +142,16 @@ int		playGame(int key, int max_x, int max_y)
 	      mvaddch(y, x, '^');
 	    }
 	  else
-	    goKey = KEY_DOWN;
+	    {
+	      goKey = KEY_DOWN;
+	      if (y < max_y - 2)
+		y++;
+	      else
+		y = 1;
+	      snake->x = x;
+	      snake->y = y;
+	      mvaddch(y, x, 'v');
+	    }
 	  break;
 	case KEY_DOWN:
 	  if (lastKey != KEY_UP)
@@ -154,7 +165,16 @@ int		playGame(int key, int max_x, int max_y)
 	      mvaddch(y, x, 'v');
 	    }
 	  else
-	    goKey = KEY_UP;
+	    {
+	      goKey = KEY_UP;
+	      if (y > 1)
+		y--;
+	      else
+		y = max_y - 2;
+	      snake->x = x;
+	      snake->y = y;
+	      mvaddch(y, x, '^');
+	    }
 	  break;
 	case KEY_LEFT:
 	  if (lastKey != KEY_RIGHT)
@@ -168,7 +188,16 @@ int		playGame(int key, int max_x, int max_y)
 	      mvaddch(y, x, '<');
 	    }
 	  else
-	    goKey = KEY_RIGHT;
+	    {
+	      goKey = KEY_RIGHT;
+	      if (x < max_x - 3)
+		x += 2;
+	      else
+		x = 2;
+	      snake->x = x;
+	      snake->y = y;
+	      mvaddch(y, x, '>');
+	    }
 	  break;
 	case KEY_RIGHT:
 	  if (lastKey != KEY_LEFT)
@@ -182,36 +211,44 @@ int		playGame(int key, int max_x, int max_y)
 	      mvaddch(y, x, '>');
 	    }
 	  else
-	    goKey = KEY_LEFT;
+	    {
+	      goKey = KEY_LEFT;
+	      if (x > 2)
+		x -= 2;
+	      else
+		x = max_x - 3;
+	      snake->x = x;
+	      snake->y = y;
+	      mvaddch(y, x, '<');
+	    }
 	  break;
 	default:
 	  break;
 	}
 
       if (inBody(snake->y, snake->x, snake))
-	return (0);
+	return (score);
       if ((x == x_eat && y == y_eat)
 	  || time(0) - tm >= (30 - (handicap / 5000)))
 	{
 	  if ((laps = time(0) - tm) >= (30 - (handicap / 5000)))
 	    {
 	      mvaddch(y_eat, x_eat, ' ');
-	      score -= 100;
+	      score -= (100 - 3 * size);
 	    }
 	  else
 	    {
-	      score += 10 - laps;
 	      if (handicap / 5000 <= 27)
 		handicap += 5000;
 	      size++;
+	      score += (10 - laps) * size;
 	      move(max_y - 1, max_x - 1 - nbrFigure(size));
-	      printw("%d", size);
 	    }
 	  token = 0;
 	  timeLeast = (30 - (handicap / 5000));
 	}
       attron(COLOR_PAIR(1));
-      mvprintw(max_y - 1, 0, " -- Score : %d -- Time before next = %.0f", score, timeLeast);
+      mvprintw(max_y - 1, 0, " -- Score : %d -- Time before next : %.0f -- Size : %d -- Speed : %d -- ", score, timeLeast, size, handicap / 1000);
       if (timeLeast < 10.)
 	addch('*');
       attroff(COLOR_PAIR(1));
@@ -226,36 +263,36 @@ void		creatBorder(int xmax, int ymax)
 
   while (x < xmax)
     {
-      mvaddch(0, x, '*');
+      mvaddch(0, x, '^');
       x++;
     }
   x = 0;
   while (x < xmax)
     {
-      mvaddch(ymax - 1, x, '*');
+      mvaddch(ymax - 1, x, 'v');
       x++;
     }
   while (y < ymax)
     {
-      mvaddch(y, 0, '*');
+      mvaddch(y, 0, '<');
       y++;
     }
   y = 0;
   while (y < ymax)
     {
-      mvaddch(y, xmax - 1, '*');
+      mvaddch(y, xmax - 1, '>');
       y++;
     }
   y = 0;
   while (y < ymax)
     {
-      mvaddch(y, 1, '*');
+      mvaddch(y, 1, '<');
       y++;
     }
   y = 0;
   while (y < ymax)
     {
-      mvaddch(y, xmax - 2, '*');
+      mvaddch(y, xmax - 2, '>');
       y++;
     }
   y = 0;
@@ -265,13 +302,28 @@ int		getCmdLine(WINDOW *win)
 {
   int		max_x;
   int		max_y;
+  int		key = 0;
+  int		score;
 
   srand(getpid() * time(0));
   getmaxyx(win, max_y, max_x);
   attron(COLOR_PAIR(1));
   creatBorder(max_x, max_y);
   attroff(COLOR_PAIR(1));
-  playGame(0, max_x, max_y);
+  score = playGame(key, max_x, max_y);
+  
+  mvaddstr(max_y / 2, (max_x - strlen("YOU FAILED !!!!")) / 2, "YOU FAILED !!!!");
+  mvaddstr(max_y / 2 + 1, (max_x - strlen("Press y to start a new game or q to quit...")) / 2, "Press y to start a new game or q to quit...");
+  mvaddstr(max_y / 2 + 3, (max_x - strlen("Your score is...")) / 2, "Your score is...");
+  mvprintw(max_y / 2 + 4, (max_x - nbrFigure(score)) / 2, "%d", score);
+  while (key != 'q' && key != 'y'
+	 && key != 'Q' && key != 'Y')
+    key = getch();
+  if (key == 'y' || key == 'Y')
+    {
+      clear();
+      getCmdLine(win);
+    }
   return (0);
 }
 
@@ -292,6 +344,9 @@ int		main(int argc, char **argv)
       fprintf(stderr, "Can't enable color.\nExiting Soft.\n");
       return (EXIT_FAILURE);
     }
+
+  init_color(COLOR_BLACK, 0, 0, 0);
+  init_color(COLOR_WHITE, 255, 255, 255);
   init_pair(1, COLOR_BLACK, COLOR_WHITE);
   init_pair(2, COLOR_YELLOW, COLOR_BLACK);
   init_pair(3, COLOR_RED, COLOR_BLACK);
