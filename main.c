@@ -57,6 +57,123 @@ int		inBody(int y, int x, t_snake *snake)
   return (0);
 }
 
+int		whichKey(int y, int x,
+			 int goKey, int lastKey,
+			 t_snake *snake,
+			 int max_x, int max_y)
+{
+  switch (goKey)
+    {
+    case KEY_UP:
+      if (lastKey != KEY_DOWN)
+	{
+	  if (y > 1)
+	    y--;
+	  else
+	    y = max_y - 2;
+	  snake->x = x;
+	  snake->y = y;
+	  mvaddch(y, x, '^');
+	}
+      else
+	{
+	  goKey = KEY_DOWN;
+	  if (y < max_y - 2)
+	    y++;
+	  else
+	    y = 1;
+	  snake->x = x;
+	  snake->y = y;
+	  mvaddch(y, x, 'v');
+	}
+      break;
+    case KEY_DOWN:
+      if (lastKey != KEY_UP)
+	{
+	  if (y < max_y - 2)
+	    y++;
+	  else
+	    y = 1;
+	  snake->x = x;
+	  snake->y = y;
+	  mvaddch(y, x, 'v');
+	}
+      else
+	{
+	  goKey = KEY_UP;
+	  if (y > 1)
+	    y--;
+	  else
+	    y = max_y - 2;
+	  snake->x = x;
+	  snake->y = y;
+	  mvaddch(y, x, '^');
+	}
+      break;
+    case KEY_LEFT:
+      if (lastKey != KEY_RIGHT)
+	{
+	  if (x > 2)
+	    x -= 2;
+	  else
+	    x = max_x - 3 - ((max_x + 1) % 2);
+	  snake->x = x;
+	  snake->y = y;
+	  mvaddch(y, x, '<');
+	}
+      else
+	{
+	  goKey = KEY_RIGHT;
+	  if (x < max_x - 4)
+	    x += 2;
+	  else
+	    x = 2;
+	  snake->x = x;
+	  snake->y = y;
+	  mvaddch(y, x, '>');
+	}
+      break;
+    case KEY_RIGHT:
+      if (lastKey != KEY_LEFT)
+	{
+	  if (x < max_x - 4)
+	    x += 2;
+	  else
+	    x = 2;
+	  snake->x = x;
+	  snake->y = y;
+	  mvaddch(y, x, '>');
+	}
+      else
+	{
+	  goKey = KEY_LEFT;
+	  if (x > 2)
+	    x -= 2;
+	  else
+	    x = max_x - 3 - ((max_x + 1) % 2);
+	  snake->x = x;
+	  snake->y = y;
+	  mvaddch(y, x, '<');
+	}
+      break;
+    default:
+      break;
+    }
+  return (goKey);
+}
+
+void		growSnake(t_snake **snake)
+{
+  t_snake	*save;
+
+  save = (*snake)->next;
+  (*snake)->next = malloc(sizeof(**snake));
+  if ((*snake)->next == NULL)
+    exit(EXIT_FAILURE);
+  (*snake)->next->next = save;
+  (*snake) = (*snake)->next;
+}
+
 int		playGame(int key, int max_x, int max_y)
 {
   int		x_eat = 0;
@@ -72,7 +189,6 @@ int		playGame(int key, int max_x, int max_y)
   int		score = 0;
   int		laps = 0;
   t_snake	*snake;
-  t_snake	*save;
   double	timeLeast = 30.;
 
   attron(COLOR_PAIR(1));
@@ -110,12 +226,7 @@ int		playGame(int key, int max_x, int max_y)
 	    {
 	      token = 1;
 	      tm = time(0);
-	      save = snake->next;
-	      snake->next = malloc(sizeof(*snake));
-	      if (snake->next == NULL)
-		exit(EXIT_FAILURE);
-	      snake->next->next = save;
-	      snake = snake->next;
+	      growSnake(&snake);
 	    }
 	}
       usleep(150000 - handicap);
@@ -128,103 +239,7 @@ int		playGame(int key, int max_x, int max_y)
 	  goKey = key;
 	}
 
-      switch (goKey)
-	{
-	case KEY_UP:
-	  if (lastKey != KEY_DOWN)
-	    {
-	      if (y > 1)
-		y--;
-	      else
-		y = max_y - 2;
-	      snake->x = x;
-	      snake->y = y;
-	      mvaddch(y, x, '^');
-	    }
-	  else
-	    {
-	      goKey = KEY_DOWN;
-	      if (y < max_y - 2)
-		y++;
-	      else
-		y = 1;
-	      snake->x = x;
-	      snake->y = y;
-	      mvaddch(y, x, 'v');
-	    }
-	  break;
-	case KEY_DOWN:
-	  if (lastKey != KEY_UP)
-	    {
-	      if (y < max_y - 2)
-		y++;
-	      else
-		y = 1;
-	      snake->x = x;
-	      snake->y = y;
-	      mvaddch(y, x, 'v');
-	    }
-	  else
-	    {
-	      goKey = KEY_UP;
-	      if (y > 1)
-		y--;
-	      else
-		y = max_y - 2;
-	      snake->x = x;
-	      snake->y = y;
-	      mvaddch(y, x, '^');
-	    }
-	  break;
-	case KEY_LEFT:
-	  if (lastKey != KEY_RIGHT)
-	    {
-	      if (x > 2)
-		x -= 2;
-	      else
-		x = max_x - 3;
-	      snake->x = x;
-	      snake->y = y;
-	      mvaddch(y, x, '<');
-	    }
-	  else
-	    {
-	      goKey = KEY_RIGHT;
-	      if (x < max_x - 3)
-		x += 2;
-	      else
-		x = 2;
-	      snake->x = x;
-	      snake->y = y;
-	      mvaddch(y, x, '>');
-	    }
-	  break;
-	case KEY_RIGHT:
-	  if (lastKey != KEY_LEFT)
-	    {
-	      if (x < max_x - 3)
-		x += 2;
-	      else
-		x = 2;
-	      snake->x = x;
-	      snake->y = y;
-	      mvaddch(y, x, '>');
-	    }
-	  else
-	    {
-	      goKey = KEY_LEFT;
-	      if (x > 2)
-		x -= 2;
-	      else
-		x = max_x - 3;
-	      snake->x = x;
-	      snake->y = y;
-	      mvaddch(y, x, '<');
-	    }
-	  break;
-	default:
-	  break;
-	}
+      goKey = whichKey(y, x, goKey, lastKey, snake, max_x, max_y);
 
       if (inBody(snake->y, snake->x, snake))
 	return (score);
