@@ -132,6 +132,11 @@ int		whichKey(int y, int x,
 	  whichKey(y, x, goKey, lastKey, snake, max_x, max_y);
 	}
       break;
+    case 'p':
+      while (getch() != 'p');
+      goKey = lastKey;
+      whichKey(y, x, goKey, lastKey, snake, max_x, max_y);
+      break;
     default:
       goKey = lastKey;
       whichKey(y, x, goKey, lastKey, snake, max_x, max_y);
