@@ -78,13 +78,7 @@ int		whichKey(int y, int x,
       else
 	{
 	  goKey = KEY_DOWN;
-	  if (y < max_y - 2)
-	    y++;
-	  else
-	    y = 1;
-	  snake->x = x;
-	  snake->y = y;
-	  mvaddch(y, x, 'v');
+	  whichKey(y, x, goKey, lastKey, snake, max_x, max_y);
 	}
       break;
     case KEY_DOWN:
@@ -101,13 +95,7 @@ int		whichKey(int y, int x,
       else
 	{
 	  goKey = KEY_UP;
-	  if (y > 1)
-	    y--;
-	  else
-	    y = max_y - 2;
-	  snake->x = x;
-	  snake->y = y;
-	  mvaddch(y, x, '^');
+	  whichKey(y, x, goKey, lastKey, snake, max_x, max_y);
 	}
       break;
     case KEY_LEFT:
@@ -124,13 +112,7 @@ int		whichKey(int y, int x,
       else
 	{
 	  goKey = KEY_RIGHT;
-	  if (x < max_x - 4)
-	    x += 2;
-	  else
-	    x = 2;
-	  snake->x = x;
-	  snake->y = y;
-	  mvaddch(y, x, '>');
+	  whichKey(y, x, goKey, lastKey, snake, max_x, max_y);
 	}
       break;
     case KEY_RIGHT:
@@ -147,16 +129,12 @@ int		whichKey(int y, int x,
       else
 	{
 	  goKey = KEY_LEFT;
-	  if (x > 2)
-	    x -= 2;
-	  else
-	    x = max_x - 3 - ((max_x + 1) % 2);
-	  snake->x = x;
-	  snake->y = y;
-	  mvaddch(y, x, '<');
+	  whichKey(y, x, goKey, lastKey, snake, max_x, max_y);
 	}
       break;
     default:
+      goKey = lastKey;
+      whichKey(y, x, goKey, lastKey, snake, max_x, max_y);
       break;
     }
   return (goKey);
