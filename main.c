@@ -1,8 +1,9 @@
 /*
- * CMD Line
+ * Snake Game
  *
  * Made by MAMODE Karim
- * The 25th of August 2011 at 15h00
+ * Created he 25th of August 2011 at 15h00
+ * Last Modification the 8th of September 2011 at 11h10
  *
  * Train to bring the most of us.
  */
