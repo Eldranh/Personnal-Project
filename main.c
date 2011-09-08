@@ -25,6 +25,8 @@ typedef struct	s_snake		t_snake;
 
 # define NORM		0
 # define BLOCK		1
+# define FAST		2
+# define SLOWER		3
 
 struct			s_snake
 {
@@ -236,6 +238,26 @@ void		growSnake(t_snake **snake)
   (*snake) = (*snake)->next;
 }
 
+t_snake		*initSnake(int y, int x)
+{
+  t_snake	*snake;
+
+  snake = malloc(sizeof(*snake));
+  if (snake == NULL)
+    exit(EXIT_FAILURE);
+  snake->x = x;
+  snake->y = y;
+  snake->type = NORM;
+  snake->next = malloc(sizeof(*snake));
+  if (snake->next == NULL)
+    exit(EXIT_FAILURE);
+  snake->next->next = snake; 
+  snake->next->x = x - 2;
+  snake->next->y = y - 1;
+  snake->next->type = snake->type;
+  return (snake);
+}
+
 int		playGame(int key, int max_x, int max_y)
 {
   int		x_eat = 0;
@@ -252,25 +274,14 @@ int		playGame(int key, int max_x, int max_y)
   int		laps = 0;
   t_snake	*snake;
   double	timeLeast = 30.;
+  int		random;
   char		type = NORM;
 
   attron(COLOR_PAIR(1));
   mvprintw(max_y - 1, 0, "Good Luck !");
   attroff(COLOR_PAIR(1));
   curs_set(0);
-  snake = malloc(sizeof(*snake));
-  if (snake == NULL)
-    exit(EXIT_FAILURE);
-  snake->x = x;
-  snake->y = y;
-  snake->type = NORM;
-  snake->next = malloc(sizeof(*snake));
-  if (snake->next == NULL)
-    exit(EXIT_FAILURE);
-  snake->next->next = snake; 
-  snake->next->x = x - 2;
-  snake->next->y = y - 1;
-  snake->next->type = snake->type;
+  snake = initSnake(y, x);
   while (key != 'q')
     {
       x = snake->x;
@@ -287,16 +298,31 @@ int		playGame(int key, int max_x, int max_y)
 	  if (x_eat % 2)
 	    x_eat++;
 	  y_eat = (rand() % (max_y - 3)) + 1;
-	  if (!(rand() % 5))
+	  random = rand() % 15;
+	  if (0 <= random && random < 3)
 	    {
 	      type = BLOCK;
 	      attron(COLOR_PAIR(3));
+	    }
+	  else if (3 <= random && random < 6)
+	    {
+	      type = FAST;
+	      attron(COLOR_PAIR(2));
+	    }
+	  else if (random == 7)
+	    {
+	      type = SLOWER;
+	      attron(COLOR_PAIR(4));
 	    }
 	  else
 	    type = NORM;
 	  mvaddch(y_eat, x_eat, '*');
 	  if (type == BLOCK)
 	    attroff(COLOR_PAIR(3));
+	  else if (type == FAST)
+	    attroff(COLOR_PAIR(2));
+	  else if (type == SLOWER)
+	    attroff(COLOR_PAIR(4));
 	  if (!inBody(y_eat, x_eat, snake))
 	    {
 	      token = 1;
@@ -304,8 +330,16 @@ int		playGame(int key, int max_x, int max_y)
 	      growSnake(&snake);
 	    }
 	}
-      usleep(150000 - handicap);
-      timeLeast -= (150000.0 - handicap) / 1000000.0;
+      if (snake->type == FAST)
+	{
+	  usleep(5000);
+	  timeLeast -= (5000.0) / 1000000.0;
+	}
+      else
+	{
+	  usleep(150000 - handicap);
+	  timeLeast -= (150000.0 - handicap) / 1000000.0;
+	}
       refresh();
 
       if ((key = getch()) != ERR)
@@ -336,15 +370,16 @@ int		playGame(int key, int max_x, int max_y)
 	      score += (10 - laps) * size;
 	      move(max_y - 1, max_x - 1 - nbrFigure(size));
 	      if (type == BLOCK)
+		creatBorder(max_x, max_y, 0);
+	      else
+		creatBorder(max_x, max_y, 1);
+	      if (type == SLOWER)
 		{
-		  creatBorder(max_x, max_y, 0);
-		  snake->type = BLOCK;
+		  snake->type = NORM;
+		  handicap -= 10000;
 		}
 	      else
-		{
-		  creatBorder(max_x, max_y, 1);
-		  snake->type = NORM;
-		}
+		snake->type = type;
 	    }
 	  token = 0;
 	  timeLeast = (30 - (handicap / 5000));
@@ -402,11 +437,11 @@ int		main(int argc, char **argv)
       return (EXIT_FAILURE);
     }
 
-  init_color(COLOR_BLACK, 0, 0, 0);
-  init_color(COLOR_WHITE, 255, 255, 255);
   init_pair(1, COLOR_BLACK, COLOR_WHITE);
   init_pair(2, COLOR_YELLOW, COLOR_BLACK);
   init_pair(3, COLOR_RED, COLOR_BLACK);
+  init_pair(4, COLOR_BLUE, COLOR_BLACK);
+
   if (noecho() == ERR)
     {
       endwin();
