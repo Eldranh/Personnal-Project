@@ -1,8 +1,9 @@
 /*
- * CMD Line
+ * Snake Game
  *
  * Made by MAMODE Karim
- * The 25th of August 2011 at 15h00
+ * Created he 25th of August 2011 at 15h00
+ * Last Modification the 8th of September 2011 at 11h10
  *
  * Train to bring the most of us.
  */
@@ -258,6 +259,91 @@ t_snake		*initSnake(int y, int x)
   return (snake);
 }
 
+void		artificialPlay(int x_eat, int y_eat,
+			       int yMax, int xMax,
+			       int *goKey, int *lastKey,
+			       t_snake *snake)
+{
+  int		token = 1;
+  int		dist = 0;
+  int		coord_incr = 0;
+
+  if (snake->type == BLOCK)
+    {
+      if ((snake->x - x_eat) != 0)
+	{
+	  if (*goKey != KEY_RIGHT && (snake->x - x_eat) > 0)
+	    {
+	      *lastKey = *goKey;
+	      *goKey = KEY_LEFT;
+	      token = 0;
+	    }
+	  else if ((snake->x - x_eat) < 0 && *goKey != KEY_LEFT)
+	    {
+	      *lastKey = *goKey;
+	      *goKey = KEY_RIGHT;
+	      token = 0;
+	    }
+	}
+      if (token)
+	{
+	  if (*goKey != KEY_UP && (snake->y - y_eat) < 0)
+	    {
+	      *lastKey = *goKey;
+	      *goKey = KEY_DOWN;
+	    }
+	  else if (*goKey != KEY_DOWN && (snake->y - y_eat) > 0)
+	    {
+	      *lastKey = *goKey;
+	      *goKey = KEY_UP;
+	    }
+	}
+    }
+  else
+    {
+      coord_incr = snake->y;
+      while (coord_incr != y_eat)
+	{
+	  coord_incr++;
+	  if (coord_incr > yMax - 1)
+	    coord_incr = 1;
+	  dist++;
+	}
+      if (dist && dist <= yMax / 2 && *goKey != KEY_UP)
+	{
+	  *lastKey = *goKey;
+	  *goKey = KEY_DOWN;
+	}
+      else if (dist && *goKey != KEY_DOWN)
+	{
+	  *lastKey = *goKey;
+	  *goKey = KEY_UP;
+	}
+      if (!dist)
+	{
+	  coord_incr = snake->x;
+	  while (coord_incr != x_eat)
+	    {
+	      coord_incr += 2;
+	      if (coord_incr > xMax - 2)
+		coord_incr = 2;
+	      dist += 2;
+	    }
+	  if (*goKey != KEY_RIGHT && dist && dist >= xMax / 2)
+	    {
+	      *lastKey = *goKey;
+	      *goKey = KEY_LEFT;
+	    }
+	  else if (dist && *goKey != KEY_RIGHT)
+	    {
+	      *lastKey = *goKey;
+	      *goKey = KEY_RIGHT;
+	    }
+	}
+    }
+}
+
+
 int		playGame(int key, int max_x, int max_y)
 {
   int		x_eat = 0;
@@ -288,6 +374,7 @@ int		playGame(int key, int max_x, int max_y)
       y = snake->y;
       if (token == 1)
 	{
+	  artificialPlay(x_eat, y_eat, max_y, max_x, &goKey, &lastKey, snake);
 	  snake->next->type = snake->type;
 	  snake = snake->next;
 	  mvaddch(snake->y, snake->x, ' ');
@@ -298,25 +385,31 @@ int		playGame(int key, int max_x, int max_y)
 	  if (x_eat % 2)
 	    x_eat++;
 	  y_eat = (rand() % (max_y - 3)) + 1;
+	  artificialPlay(x_eat, y_eat, max_y, max_x, &goKey, &lastKey, snake);
 	  random = rand() % 15;
 	  if (0 <= random && random < 3)
 	    {
 	      type = BLOCK;
 	      attron(COLOR_PAIR(3));
+	      mvaddch(y_eat, x_eat, 'X');
 	    }
 	  else if (3 <= random && random < 6)
 	    {
 	      type = FAST;
 	      attron(COLOR_PAIR(2));
+	      mvaddch(y_eat, x_eat, '+');
 	    }
 	  else if (random == 7)
 	    {
 	      type = SLOWER;
 	      attron(COLOR_PAIR(4));
+	      mvaddch(y_eat, x_eat, 'o');
 	    }
 	  else
-	    type = NORM;
-	  mvaddch(y_eat, x_eat, '*');
+	    {
+	      type = NORM;
+	      mvaddch(y_eat, x_eat, '*');
+	    }
 	  if (type == BLOCK)
 	    attroff(COLOR_PAIR(3));
 	  else if (type == FAST)
@@ -342,11 +435,13 @@ int		playGame(int key, int max_x, int max_y)
 	}
       refresh();
 
-      if ((key = getch()) != ERR)
-	{
-	  lastKey = goKey;
-	  goKey = key;
-	}
+      /* if ((key = getch()) != ERR) */
+      /* 	{ */
+      /* 	  lastKey = goKey; */
+      /* 	  goKey = key; */
+      /* 	} */
+
+      /* artificialPlay(x_eat, y_eat, &goKey, &lastKey, snake); */
 
       goKey = whichKey(y, x, goKey, lastKey, snake, max_x, max_y);
       if (goKey == -1)
