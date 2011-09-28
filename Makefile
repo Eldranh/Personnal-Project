@@ -8,7 +8,11 @@
 
 NAME=		Snake
 
-SRC=		main.c
+SRC=		main.c				\
+		display.c			\
+		ai_play.c			\
+		game.c				\
+
 OBJ=		$(SRC:.c=.o)
 
 CC=		gcc
