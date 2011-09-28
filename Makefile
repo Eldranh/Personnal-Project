@@ -10,7 +10,7 @@ NAME=		Snake
 
 SRC=		main.c				\
 		display.c			\
-		ai_play.c			\
+		ia_play.c			\
 		game.c				\
 
 OBJ=		$(SRC:.c=.o)
