@@ -8,20 +8,24 @@
 
 NAME=		Snake
 
-SRC=		main.c				\
-		display.c			\
-		ia_play.c			\
-		game.c				\
+BIN_DIR=	bin
+SRC_DIR=	src
+INC_DIR=	include
+
+SRC=		$(SRC_DIR)/main.c				\
+		$(SRC_DIR)/display.c			\
+		$(SRC_DIR)/ia_play.c			\
+		$(SRC_DIR)/game.c				\
 
 OBJ=		$(SRC:.c=.o)
 
 CC=		gcc
 
-CFLAGS=		-Wall -Wextra -pedantic -ansi -g3 -ggdb
+CFLAGS=		-Wall -Wextra -pedantic -ansi -g3 -ggdb -I$(INC_DIR)/
 LDFLAGS=	-lncurses -lm
 
 $(NAME):	$(OBJ)
-	$(CC) -o $(NAME) $(OBJ) $(LDFLAGS)
+	$(CC) -o $(BIN_DIR)/$(NAME) $(OBJ) $(LDFLAGS)
 
 all:		$(NAME)
 

@@ -63,7 +63,7 @@ void		artificialPlay(int x_eat, int y_eat,
 	  *lastKey = *goKey;
 	  *goKey = KEY_DOWN;
 	}
-      else if (dist && *goKey != KEY_DOWN)
+      else if (dist > yMax / 2 && *goKey != KEY_DOWN)
 	{
 	  *lastKey = *goKey;
 	  *goKey = KEY_UP;
